@@ -1,5 +1,5 @@
-# Project Name
-Project description
+# AWS EC2 Powershell Examples
+The files in this repository compliment the AWS Powershell SDK found at https://aws.amazon.com/powershell/.
 
 # Disclaimer
 No Support and No Warranty are provided by SMA Technologies for this project and related material. The use of this project's files is on your own risk.
