@@ -1,12 +1,4 @@
 ﻿#PowerShell Module file for Amazon Web Services
-
-function SMA_AWSVersion
-{
-    Write-Host "****************"
-    Write-Host "AWS Version 1.0"
-    Write-host "****************"
-}
-
 ##################################################################################################
 #Needed to get the necessary cmdlet files
 #Install-Package -Name AWSPowerShell.NetCore -Source https://www.powershellgallery.com/api/v2/ -ProviderName NuGet -ExcludeVersion -Destination "C:\Program Files (x86)\PowerShell"
@@ -15,7 +7,7 @@ function SMA_AWSVersion
 #https://aws.amazon.com/powershell/
 
 #Sets up profile/keys so that it doesnt need to be called each time
-function SMA_SetupAWSProfile($accesskey,$secretkey,$profile)
+function OpCon_SetupAWSProfile($accesskey,$secretkey,$profile)
 {
     try
     {
@@ -28,31 +20,8 @@ function SMA_SetupAWSProfile($accesskey,$secretkey,$profile)
     }
 }
 
-
-#Sets up profile/keys so that it doesnt need to be called each time
-function SMA_GetAWSProfiles()
-{
-    try
-    {
-        $profiles = Get-AWSCredential -ListProfileDetail
-    }
-    catch [Exception]
-    {
-        Write-Host $_.Exception.Message
-        Exit 101
-    }
-
-    if($profiles.Count -eq 0)
-    {
-        Write-Host "No AWS credentials stored on this account"
-        Exit 999
-    }
-
-    return $profiles
-}
-
 #Gets an AWS instance information by tag
-function SMA_CreateAWSImage($instancetag,$imagename,$imagedescription,$region)
+function OpCon_CreateAWSImage($instancetag,$imagename,$imagedescription,$region)
 {
     try
     {
@@ -77,79 +46,8 @@ function SMA_CreateAWSImage($instancetag,$imagename,$imagedescription,$region)
     return $newImage
 }
 
-#Stops an AWS Instance
-function SMA_StopAWSInstance($id,$region)
-{
-    try
-    {
-        $stop = Stop-EC2Instance -InstanceId $id -Region $region
-    }
-    catch [Exception]
-    {
-        Write-Host $_.Exception.Message
-        Exit 104
-    }
-}
-
-#Starts an AWS Instance
-function SMA_StartAWSInstance($id,$region)
-{
-    try
-    {
-        $start = Start-EC2Instance -InstanceId $id -Region $region
-    }
-    catch [Exception]
-    {
-        Write-Host $_.Exception.Message
-        Exit 104
-    }
-}
-
-#Removes an AWS Instance
-function SMA_RemoveAWSInstance($id,$region)
-{
-    try
-    {
-        $remove = Remove-EC2Instance -InstanceId $id -Region $region -Force 
-    }
-    catch [Exception]
-    {
-        Write-Host $_.Exception.Message
-        Exit 104
-    }
-}
-
-#Restarts an AWS instance
-function SMA_RestartAWSInstance($id,$region)
-{
-    try
-    {
-        $restart = Restart-EC2Instance -InstanceId $id -Region $region -Force 
-    }
-    catch [Exception]
-    {
-        Write-Host $_.Exception.Message
-        Exit 104
-    }
-}
-
-#Gets information about an instance based off the id
-function SMA_GetAWSInstanceById($id,$region)
-{
-    try
-    {
-        $get = Get-EC2Instance -InstanceId $id -Region $region
-    }
-    catch [Exception]
-    {
-        Write-Host $_.Exception.Message
-        Exit 104
-    }
-    return $get
-}
-
 #Gets an AWS instance information by tag
-function SMA_GetAWSInstanceByTag($instancetag,$region)
+function OpCon_GetAWSInstanceByTag($instancetag,$region)
 {
     try
     {
@@ -165,7 +63,7 @@ function SMA_GetAWSInstanceByTag($instancetag,$region)
 }
 
 #Gets an AWS volume information by tag
-function SMA_GetAWSVolumeByTag($tag,$region)
+function OpCon_GetAWSVolumeByTag($tag,$region)
 {
     try
     {
@@ -181,7 +79,7 @@ function SMA_GetAWSVolumeByTag($tag,$region)
 }
 
 #Creates a new AWS instance based of input image
-function SMA_CreateAWSInstance($awsimageid,$awsimagename,$awsinstancetype,$tagvalue,$key,$region,$isblank)
+function OpCon_CreateAWSInstance($awsimageid,$awsimagename,$awsinstancetype,$tagvalue,$key,$region,$isblank)
 {
     if($awsimagename)
     {
@@ -245,7 +143,7 @@ function SMA_CreateAWSInstance($awsimageid,$awsimagename,$awsinstancetype,$tagva
 }
 
 #Creates a new EBS volume
-function SMA_CreateAWSVolume($tag,$region,$volumetype,$volumesize)
+function OpCon_CreateAWSVolume($tag,$region,$volumetype,$volumesize)
 {
     $tag = @{ Key="Name"; Value="$tag" }
     $tagspec = new-object Amazon.EC2.Model.TagSpecification
@@ -282,20 +180,4 @@ function SMA_CreateAWSVolume($tag,$region,$volumetype,$volumesize)
     }
 
     return $volume
-}
-
-#Creates a keypair that is necessary to be able to login to AWS Instances
-function SMA_CreateAWSKeyPair($key,$region)
-{
-    try
-    {
-        $keypair = New-EC2KeyPair -KeyName $key -Region $region
-    }
-    catch [Exception]
-    {
-        Write-Host $_.Exception.Message
-        Exit 101
-    }
-
-    return $keypair
 }

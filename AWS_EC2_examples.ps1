@@ -27,15 +27,13 @@
     $volumesize = 30
 )
 
-if(Test-Path $awsmodule)
+if((Test-Path $awsmodule) -and ($PSVersionTable.PSVersion.Major -ge 7))
 {
     #Import needed modules
     try
     {
-        Import-Module AWSPowershell
+        Import-Module AWSPowerShell.NetCore -Force
         Import-Module -Name $awsmodule -Force
-
-        #Set-DefaultAWSRegion -Region $region
 
         Get-AWSPowerShellVersion #Output version
     }
@@ -64,7 +62,7 @@ if($option -eq "createAWSOPCON")
         Exit 100        
     }
 
-    SMA_CreateAWSInstance -awsimageid $imageid -awsimagename $imagename -awsinstancetype $instancetype -tagvalue $tag -key $keyname -region $region
+    OpCon_CreateAWSInstance -awsimageid $imageid -awsimagename $imagename -awsinstancetype $instancetype -tagvalue $tag -key $keyname -region $region
 
     $counter = 0
     $status = ""
@@ -72,7 +70,7 @@ if($option -eq "createAWSOPCON")
     {
         try
         {
-            $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region | Where-Object{$_.State.Name.Value -eq "running"}
+            $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region | Where-Object{$_.State.Name.Value -eq "running"}
         
             if($getinfo)
             {
@@ -98,12 +96,12 @@ if($option -eq "createAWSOPCON")
     $getinfo
     Write-Host "Number of loops: $counter`r`n"
 
-    SMA_CreateAgent -agentname $tag -agenttype $agenttype -agentdescription $agentdescription -agentsocket $agentsocket -agentjors $agentjors -token $apitoken -url $apiaddress
-    SMA_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "tcpIpAddress" -value $getinfo.PublicIpAddress
-    SMA_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "fileTransferRole" -value "T"
-    SMA_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "fileTransferPortNumberForNonTLS" -value $agentjors
-    SMA_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "supportNonTLSForSMAFTServer" -value "true"
-    SMA_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "supportNonTLSForSMAFTAgent" -value "true"
+    OpCon_CreateAgent -agentname $tag -agenttype $agenttype -agentdescription $agentdescription -agentsocket $agentsocket -agentjors $agentjors -token $apitoken -url $apiaddress
+    OpCon_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "tcpIpAddress" -value $getinfo.PublicIpAddress
+    OpCon_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "fileTransferRole" -value "T"
+    OpCon_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "fileTransferPortNumberForNonTLS" -value $agentjors
+    OpCon_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "supportNonTLSForSMAFTServer" -value "true"
+    OpCon_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "supportNonTLSForSMAFTAgent" -value "true"
 }
 elseif($option -eq "getAWSIPforOpCon")
 {
@@ -120,24 +118,24 @@ elseif($option -eq "getAWSIPforOpCon")
     if($agentname)
     { $tag = $agentname }
 
-    $aws = (SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region).PublicIpAddress
-    SMA_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "tcpIpAddress" -value $aws
+    $aws = (OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region).PublicIpAddress
+    OpCon_UpdateAgent -agentname $tag -url $apiaddress -token $apitoken -field "tcpIpAddress" -value $aws
     Start-Sleep -Seconds 2
 
-    $machine = SMA_GetAgent -agentname "$tag" -url $apiaddress -token $apitoken
+    $machine = OpCon_GetAgent -agentname "$tag" -url $apiaddress -token $apitoken
     $machine[0].availableProperties = $machine[0].availableProperties -eq 0
     $machine[0].availableProperties += ,@(@{name="IP";value=$aws})
-    SMA_UpdateAgent -agentname $tag -token $apitoken -url $apiaddress -field "availableProperties" -value $machine[0].availableProperties
+    OpCon_UpdateAgent -agentname $tag -token $apitoken -url $apiaddress -field "availableProperties" -value $machine[0].availableProperties
 }
 elseif($option -eq "createinstance")
 {
-    $awsServer = SMA_CreateAWSInstance -awsimageid $imageid -awsimagename $imagename -awsinstancetype $instancetype -tagvalue $tag -key $keyname
+    $awsServer = OpCon_CreateAWSInstance -awsimageid $imageid -awsimagename $imagename -awsinstancetype $instancetype -tagvalue $tag -key $keyname
 
     $counter = 0
     $status = ""
     While(($status -ne "running") -and ($counter -lt 20))
     {
-        $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region
+        $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region
         $status = $getinfo.State.Name.Value
 
         Start-Sleep -Seconds 30
@@ -154,13 +152,13 @@ elseif($option -eq "createinstance")
 }
 elseif($option -eq "createBlankInstance")
 {
-    $awsServer = SMA_CreateAWSInstance -awsimageid $imageid -awsimagename $imagename -awsinstancetype $instancetype -tagvalue $tag -key $keyname -isblank "yes"
+    $awsServer = OpCon_CreateAWSInstance -awsimageid $imageid -awsimagename $imagename -awsinstancetype $instancetype -tagvalue $tag -key $keyname -isblank "yes"
 
     $counter = 0
     $status = ""
     While(($status -ne "running") -and ($counter -lt 20))
     {
-        $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region
+        $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region
         $status = $getinfo.State.Name.Value
 
         Start-Sleep -Seconds 30
@@ -177,14 +175,14 @@ elseif($option -eq "createBlankInstance")
 }
 elseif($option -eq "stopinstance")
 { 
-    $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region
-    $awsServer = SMA_StopAWSInstance -id $getinfo.InstanceId -region $region
+    $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region
+    $awsServer = Stop-EC2Instance -InstanceId $getinfo.InstanceId -region $region
 
     $counter = 0
     $status = ""
     While(($status -ne "stopped") -and ($counter -lt 40))
     {
-        $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region
+        $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region
         $status = $getinfo.State.Name.Value
 
         Start-Sleep -Seconds 15
@@ -201,14 +199,14 @@ elseif($option -eq "stopinstance")
 }
 elseif($option -eq "startinstance")
 { 
-    $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region
-    $awsServer = SMA_StartAWSInstance -id $getinfo.InstanceId -region $region
+    $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region
+    $awsServer = Start-EC2Instance -InstanceId $getinfo.InstanceId -region $region
 
     $counter = 0
     $status = ""
     While(($status -ne "running") -and ($counter -lt 40))
     {
-        $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region
+        $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region
         $status = $getinfo.State.Name.Value
 
         Start-Sleep -Seconds 15
@@ -225,14 +223,14 @@ elseif($option -eq "startinstance")
 }
 elseif($option -eq "removeInstance")
 {
-    $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region
-    $remove = SMA_RemoveAWSInstance -id $getinfo.InstanceId -region $region
+    $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region
+    $remove = Remove-EC2Instance -InstanceId $getinfo.InstanceId -region $region
 
     $counter = 0
     $status = ""
     While(($status -ne "terminated") -and ($counter -lt 10))
     {
-        $getinfo = SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region
+        $getinfo = OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region
         $status = $getinfo.State.Name.Value
 
         Start-Sleep -Seconds 30
@@ -249,15 +247,15 @@ elseif($option -eq "removeInstance")
 }
 elseif($option -eq "setupProfile")
 {
-    SMA_SetupAWSProfile -accesskey $accesskey -secretkey $secretkey -profile $profile
+    OpCon_SetupAWSProfile -accesskey $accesskey -secretkey $secretkey -profile $profile
 }
 elseif($option -eq "verifyProfile")
 {
-    SMA_GetAWSProfiles
+    Get-AWSCredential -ListProfileDetail
 }
 elseif($option -eq "createImage")
 {
-    $image = SMA_CreateAWSImage -instancetag $tag -imagename $imagename -imagedescription $imagedescription -region $region
+    $image = OpCon_CreateAWSImage -instancetag $tag -imagename $imagename -imagedescription $imagedescription -region $region
     $image
 
     $counter = 0
@@ -306,7 +304,11 @@ elseif($option -eq "removeIp")
 }
 elseif($option -eq "test")
 {
-    SMA_GetAWSInstanceByTag -instancetag "$tag" -region $region    
+    OpCon_GetAWSInstanceByTag -instancetag "$tag" -region $region    
+}
+elseif($option -eq "keypair")
+{
+    New-EC2KeyPair -KeyName $key -Region $region    
 }
 else
 {
