@@ -5,7 +5,7 @@
     $imagename = "WINDOWS_2019_BASE",
     $imageid,
     $instancetype = "t2.micro", 
-    $region = "us-west-2",
+    $region = "us-east-2",
     $tag,
     $option,
     $apitoken,
@@ -24,7 +24,9 @@
     $opconmodule = "C:\ProgramData\OpConxps\Demo\OpCon.psm1",
     $awsmodule = "C:\ProgramData\OpConxps\Demo\AWS.psm1",
     $volumetype = "gp2",
-    $volumesize = 30
+    $volumesize = 30,
+    $s3file,
+    $s3Bucket
 )
 
 if((Test-Path $awsmodule) -and ($PSVersionTable.PSVersion.Major -ge 7))
@@ -309,6 +311,17 @@ elseif($option -eq "test")
 elseif($option -eq "keypair")
 {
     New-EC2KeyPair -KeyName $key -Region $region    
+}
+elseif($option -eq "removeS3file")
+{
+    $result = $s3File.Split("\")
+    Remove-S3Object -BucketName $s3Bucket -Key $result[$result.Count-1] -Region $region -Force
+    Get-S3Object -BucketName $s3Bucket -Region $region
+}
+elseif($option -eq "addS3file")
+{
+    Write-S3Object -BucketName $s3Bucket -File "$s3File" -Region $region -Force
+    Get-S3Object -BucketName $s3Bucket -Region $region
 }
 else
 {
