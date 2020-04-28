@@ -3,7 +3,7 @@ The files in this repository are to assist with managing AWS EC2 instances.  Usi
 
 # Prerequisites
 * PowerShell v7+
-* <a href url ="https://aws.amazon.com/powershell">AWS Powershell SDK</a>
+* <a href url ="https://docs.aws.amazon.com/powershell/latest/userguide/pstools-getting-set-up-windows.html">AWS Powershell SDK</a>
 
 # Instructions
 Prior to running any scripts on AWS you will need to setup your authentication profile in Powershell.  Instructions for that can be found <a href url="https://docs.aws.amazon.com/powershell/latest/userguide/pstools-getting-started.html">here</a>.
