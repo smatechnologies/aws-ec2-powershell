@@ -2,7 +2,7 @@
 The files in this repository are to assist with managing AWS EC2 instances.  Using the examples in these scripts, you will be able to start/stop/remove/create EC2 Instances, create an image, and add/remove IP addresses from an AWS security group.
 
 # Prerequisites
-* PowerShell v5.1+
+* PowerShell v7+
 * <a href url ="https://aws.amazon.com/powershell">AWS Powershell SDK</a>
 
 # Instructions
@@ -12,7 +12,7 @@ The module file in this repository contains numerous functions to make writing o
 
 Example:
 ```
-Import-Module AWSPowershell -Force
+Import-Module AWSPowershell.NetCore -Force
 Import-Module -Name "C:\AWS_EC2_module.psm1" -Force
 ```
 
